@@ -1,0 +1,35 @@
+{
+  "plugins": [
+    [
+      "build-plugin-fusion",
+      {
+        "themePackage": "@alifd/theme-design-pro"
+      }
+    ],
+    [
+      "build-plugin-moment-locales",
+      {
+        "locales": [
+          "zh-cn"
+        ]
+      }
+    ]
+  ],
+  "proxy": {
+    "/mainApi": {
+      "enable": true,
+      "target": "http://order-fulfillment.test.4px.com",
+      "pathRewrite": {
+        "^/mainApi": ""
+      }
+    }
+  },
+  "modeConfig": {
+    "branch": {
+      "outputDir": "E:/FB4/fpx-fb4-order/fpx-fb4-order-web/src/main/resources/static/build/"
+    },
+    "trunk": {
+      "outputDir": "E:/FB4_trunk/fpx-fb4-order-web/src/main/resources/static/build/"
+    }
+  }
+}
