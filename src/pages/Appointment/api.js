@@ -10,8 +10,8 @@ export default {
   },
 
   // 预约面板:月和列表面板
-  async getMonthAndListPanel(data) {
-    return await request.post(`/appointment/getMonthAndListPanel`, data);
+  async getReservationForPanel(data) {
+    return await request.post(`/appointment/getReservationForPanel`, data);
   },
 
   // 查询客预约单号
@@ -45,5 +45,13 @@ export default {
   // 取消预约
   async cancelReceivingPlan(data) {
     return await request(`/appointment/cancelReceivingPlan?receivingPlanNo=${data}`);
-  }
+  },
+
+  /**
+   * 预约月面板- (date, warehouseCode)，根据天获取可预约类型和时间段
+   * @param {*} data 
+   */
+  async getDayUnit(data) {
+    return await request.post(`/appointment/getDayUnit`, data);
+  },
 }

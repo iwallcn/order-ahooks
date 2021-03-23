@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { injectIntl } from 'react-intl';
-import { Field, Form, Input, Button, Dialog, Tree, Message, Select } from '@alifd/next';
+import { Field, Form, Input, Button, Dialog, Tree, Message, Collapse, Tab } from '@alifd/next';
 import moment from 'moment';
 import styles from './index.module.scss';
 import PageHeader from '@/components/PageHeader';
@@ -11,6 +11,7 @@ import Month from './month';
 import List from './list';
 import API from './api';
 import Cookies from 'js-cookie';
+import QueueDialog from './dialogQueue';
 
 const FormItem = Form.Item;
 const formLayout = {
@@ -26,15 +27,7 @@ export default injectIntl(({ intl }) => {
   const PAGE_TYPE = [lang['fb4.to.appointment'], lang['fb4.monthly.reservation.details'], lang['fb4.my.appointment.list']];
 
   /**
-   * week-周数据相关
-   */
-
-  /**
    * 设置moment语言
-   * zh-cn 44445 zh  中文
-      en 44445 en   英文
-      en 44445 ja   日文
-      en 44445 zh  没有
    */
   let _currentWeek;
   let langStr = Cookies.get('lang') || '';
@@ -45,7 +38,6 @@ export default injectIntl(({ intl }) => {
     moment.locale('zh-cn');
     _currentWeek = moment().week() + 1;
   }
-  console.log(moment.locale(), 44445, Cookies.get('lang'), _currentWeek);
   const [currentWeek, setCurrentWeek] = useState(_currentWeek); // 当前时间当前周
   const [initWeek, setInitWeek] = useState(0); // 起始周从0开始
 
@@ -75,13 +67,28 @@ export default injectIntl(({ intl }) => {
   const [weekResult, setWeekResult] = useState({});
   const [monthResult, setMonthResult] = useState([]);
   const [visible, setVisible] = useState(false);
-  const [pageType, setPageType] = useState(PAGE_TYPE[0]); //FIXME
+  const [pageType, setPageType] = useState(0); //FIXME
   const [TYPE, setTYPE] = useState({});
   const [ICON, setICON] = useState({});
   const apField = Field.useField({ values: {} });
-
-  const selectChange = (val, type, item) => {
-    setPageType(val);
+  // 查询客预约单号
+  const [availableNoList, setAvailableNoList] = useState([]);
+  const queryAvailableNo = () => {
+    API.queryAvailableNo().then(res => {
+      if (res.success) {
+        let temp = []
+        res.data.map(val => {
+          let obj: any = {
+            value: val,
+            key: val
+          }
+          temp.push(obj);
+        })
+        setAvailableNoList(temp);
+      } else {
+        Message.error(res.errors ? res.errors[0].errorMsg : res.msg);
+      }
+    })
   }
 
   /**
@@ -101,7 +108,11 @@ export default injectIntl(({ intl }) => {
       return;
     }
     setVisible(false);
-    getWeekList();
+    if (pageType != 2) {
+      mockData();
+    } else {
+      getMonthList();
+    }
   };
   // 仓库弹出框
   const WH_Dialog = (
@@ -136,9 +147,9 @@ export default injectIntl(({ intl }) => {
       return
     }
     if (n == 0) { // 点击上一周
-      if (isPre() <= 0) { // 判断当前周第一天跟当前日期进行对比
-        return;
-      }
+      // if (isPre() <= 0) { // 判断当前周第一天跟当前日期进行对比
+      //   return;
+      // }
       if (currentWeek == 1) {
         setCurrentWeek(weeks);
       } else {
@@ -154,11 +165,6 @@ export default injectIntl(({ intl }) => {
       setInitWeek(initWeek + 1);
     }
   };
-  const isPre = () => {
-    let current: any = moment().add(initWeek, 'week').startOf('week').format('YYYY-MM-DD');
-    let today: any = moment().format('YYYY-MM-DD');
-    return moment(current).valueOf() - moment(today).valueOf();
-  }
 
   /**
    * 切换月时，记录下当前操作的索引，以当前时间0为准，向前+1，向后-1
@@ -169,77 +175,49 @@ export default injectIntl(({ intl }) => {
     n ? setInitMonth(initMonth - 1) : setInitMonth(initMonth + 1);
   };
 
+  const Panel = Collapse.Panel;
   const Search = (
     <div className="Search">
-      <h4><b>{lang['fb4.appointment.instructions']}</b><span>{lang['fb4.appointment.rules.details']}</span></h4>
-      <ul>
-        <li><b>1. {lang['fb4.appointment.priority']}：</b>
-          <CustomIcon type="shohuo" className={styles.shohuo} />{lang['fb4.reservation']} &gt;
-          <CustomIcon type="zengzhi" className={styles.zengzhi} />{lang['fb4.reservation.value.add']} &gt;
-          <CustomIcon type="paicang" className={styles.paicang} />{lang['fb4.reservation.warehouse.queue']} &gt;
-          <CustomIcon type="paidui" className={styles.paidui} />{lang['fb4.reservation.queue']}
-        </li>
-        <li><b>2. {lang['fb4.reservation']}：</b>{lang['fb4.reservation.instructions']}</li>
-        <li><b>3. {lang['fb4.reservation.value.add']}：</b>{lang['fb4.reservation.value.add.instructions']}</li>
-        <li><b>4. {lang['fb4.reservation.warehouse.queue']}：</b>{lang['fb4.reservation.warehouse.queue.instructions']}</li>
-        <li><b>5. {lang['fb4.reservation.queue']}：</b>{lang['fb4.reservation.queue.instructions']}</li>
-        <li><b>6. {lang['fb4.special.reminder']}：</b>{lang['fb4.special.reminder.instructions']}</li>
-      </ul>
+      <Collapse>
+        <Panel title={`${lang['fb4.appointment.instructions']} / ${lang['fb4.appointment.rules.details']}`} className={styles.collapse}>
+          <ul>
+            <li>
+              <b>1. {lang['fb4.appointment.priority']}：</b>
+              <span className="lispan">
+                <dt className={styles.rulesDt}>
+                  <dl className={styles.rulesDl}><span className={`${styles.shohuobg} ${styles.point}`} /><span>{lang['fb4.reservation']}</span><span>&gt;</span></dl>
+                  <dl className={styles.rulesDl}><span className={`${styles.zengzhibg} ${styles.point}`} /><span>{lang['fb4.reservation.value.add']}</span><span>&gt;</span></dl>
+                  <dl className={styles.rulesDl}><span className={`${styles.paicangbg} ${styles.point}`} /><span>{lang['fb4.reservation.warehouse.queue']}</span><span>&gt;</span></dl>
+                  <dl className={styles.rulesDl}><span className={`${styles.paiduibg} ${styles.point}`} /><span>{lang['fb4.reservation.queue']}</span></dl>
+                </dt>
+              </span>
+            </li>
+            <li><b>2. {lang['fb4.reservation']}：</b><span className="lispan">{lang['fb4.reservation.instructions']}</span></li>
+            <li><b>3. {lang['fb4.reservation.value.add']}：</b><span className="lispan">{lang['fb4.reservation.value.add.instructions']}</span></li>
+            <li><b>4. {lang['fb4.reservation.warehouse.queue']}：</b><span className="lispan">{lang['fb4.reservation.warehouse.queue.instructions']}</span></li>
+            <li><b>5. {lang['fb4.reservation.queue']}：</b><span className="lispan">{lang['fb4.reservation.queue.instructions']}</span></li>
+            <li><b>6. {lang['fb4.special.reminder']}：</b><span className="lispan">{lang['fb4.special.reminder.instructions']}</span></li>
+          </ul>
+        </Panel>
+      </Collapse>
     </div>
   );
 
   /**
-   * 获取周列表 TODO
-   * 升序
-   */
-  const getWeekList = () => {
-    let queryTime = {
-      beginDate: moment().add(initWeek, 'week').startOf('week').valueOf(),
-      endDate: moment().add(initWeek, 'week').endOf('week').valueOf()
-    }
-    let data = {
-      beginDate: queryTime.beginDate,
-      endDate: queryTime.endDate,
-      warehouseCode: warehouseCode[0]
-    }
-    API.getUnit(data).then(res => {
-      if (res.success && res.data && res.data.appointmentPanelUnitList) {
-        let arr = res.data.appointmentPanelUnitList
-        if (!arr.length) {
-          setWeekResult({});
-          return;
-        }
-        arr.sort((a, b) => {
-          return moment(a.appointmentTime).valueOf() - moment(b.appointmentTime).valueOf()
-        });
-        setWeekResult({
-          ...res.data, arr
-        });
-      } else {
-        Message.error(res.errors ? res.errors[0].errorMsg : res.msg);
-      }
-    })
-  }
-
-  /**
-   * 获取月列表
-   * 升序
+   * 获取月列表，只查询今天之后的数据
    */
   const getMonthList = () => {
-    let queryTime = {
-      beginDate: moment().subtract(initMonth, 'months').startOf('month').valueOf(),
-      endDate: moment().subtract(initMonth, 'months').endOf('month').valueOf()
-    }
-    let inquiryNumber = apField.getValue('inquiryNumber');
+    // let monthStart = moment().subtract(initMonth, 'months').startOf('month').valueOf();
     let data = {
-      beginDate: queryTime.beginDate,
-      endDate: queryTime.endDate,
+      beginDate: moment().format('YYYY-MM-DD'),
+      whetherListQuery: 'Y',
+      // endDate: moment().subtract(initMonth, 'months').endOf('month').valueOf(),
       warehouseCode: warehouseCode[0],
-      inquiryNumber: inquiryNumber
+      inquiryNumber: apField.getValue('inquiryNumber') ? apField.getValue('inquiryNumber') : ''
     }
-    API.getMonthAndListPanel(data).then(res => {
-      if (res.success && res.data) {
-        if (!res.data.length) {
+    API.getReservationForPanel(data).then(res => {
+      if (res.success) {
+        if (!res.data || !res.data.length) {
           setMonthResult([]);
           return;
         }
@@ -255,6 +233,7 @@ export default injectIntl(({ intl }) => {
         }
         setMonthResult(temp);
       } else {
+        setMonthResult([]);
         Message.error(res.errors ? res.errors[0].errorMsg : res.msg);
       }
     })
@@ -280,6 +259,106 @@ export default injectIntl(({ intl }) => {
   }
 
   /**
+   * 周面板和月面板数据通过2个接口组装，
+   * 周列表中没有已经预约过的单号数据，月列表中没有可预约的时间段数据
+   */
+  const mockData = () => {
+    let beginDate, endDate;
+    if (pageType == 0) {
+      beginDate = moment().add(initWeek, 'week').startOf('week').format('YYYY-MM-DD');
+      endDate = moment().add(initWeek, 'week').endOf('week').format('YYYY-MM-DD');
+    } else {
+      beginDate = moment().subtract(initMonth, 'months').startOf('month').format('YYYY-MM-DD');
+      endDate = moment().subtract(initMonth, 'months').endOf('month').format('YYYY-MM-DD')
+    }
+    let data = {
+      warehouseCode: warehouseCode[0],
+      beginDate,
+      endDate
+    }
+    Promise.all([
+      API.getReservationForPanel(data),
+      API.getUnit(data),
+    ]).then(res => {
+      let appointmentPanelUnitList: any = [], monthList: any = [];
+      // 处理月接口
+      if (res[0].success && res[0].data && res[0].data.length) {
+        monthList = res[0].data.sort((a, b) => {
+          return moment(a.appointmentTime).valueOf() - moment(b.appointmentTime).valueOf();
+        });
+        for (let i = 0; i < monthList.length; i++) {
+          let t = monthList[i].reservationTimeClassifyList;
+          let d = t.sort((a, b) => {
+            return Date.parse('20 Aug 2000 ' + a.actualDate) - Date.parse('20 Aug 2000 ' + b.actualDate)
+          });
+          monthList[i].reservationTimeClassifyList = d;
+        }
+      }
+
+      // 处理周接口
+      if (res[1].success && res[1].data && res[1].data.appointmentPanelUnitList) {
+        appointmentPanelUnitList = res[1].data.appointmentPanelUnitList
+        if (!appointmentPanelUnitList.length) {
+          setWeekResult({});
+          return;
+        }
+        appointmentPanelUnitList.sort((a, b) => {
+          return moment(a.appointmentTime).valueOf() - moment(b.appointmentTime).valueOf()
+        });
+        // 可能周接口中某一天没有返回时间段
+        let notEmptyUnitTypeList = appointmentPanelUnitList.find(v => v.unitTypeList != null && v.unitTypeList.length > 0);
+        if (notEmptyUnitTypeList) {
+          for (let i in appointmentPanelUnitList) {
+            if (!appointmentPanelUnitList[i].unitTypeList) {
+              appointmentPanelUnitList[i]['unitTypeList'] = [];
+              notEmptyUnitTypeList.unitTypeList.forEach((item, index) => {
+                appointmentPanelUnitList[i]['unitTypeList'][index] = { ...item };
+              });
+              for (let j in appointmentPanelUnitList[i]['unitTypeList']) {
+                appointmentPanelUnitList[i]['unitTypeList'][j]["reservationTimeClassifyList"] = [];
+              }
+            }
+          }
+
+          if (monthList.length) { // 遍历月接口
+            for (let v in appointmentPanelUnitList) {
+              let unitTypeList = appointmentPanelUnitList[v]['unitTypeList'];
+              // 2个接口中匹配是否找到同一个的数据
+              let obj = monthList.filter(val => val.appointmentTime == appointmentPanelUnitList[v].appointmentTime);
+              /**
+               * 如果能匹配到：周面板中unitTypeList不为空，则遍历填充单号数据；周面板中unitTypeList为空，则先填充满时间段，再填充单号数据
+               * 单号填充规则：最早的丢到最前面，最晚的丢到最后面；如果没有匹配到，也需要填充满时间段数据
+               */
+              if (obj.length) {
+                let timeList = obj[0]['reservationTimeClassifyList']; // 单号
+                for (let i = 0; i < timeList.length; i++) {
+                  for (let j = 0; j < unitTypeList.length; j++) {
+                    unitTypeList[j]['reservationTimeClassifyList'] =
+                      unitTypeList[j]['reservationTimeClassifyList'] && unitTypeList[j]['reservationTimeClassifyList'].length ? unitTypeList[j]['reservationTimeClassifyList'] : [];
+                    let beginTime = Date.parse('20 Aug 2000 ' + unitTypeList[j].beginTime)
+                    let endTime = Date.parse('20 Aug 2000 ' + unitTypeList[j].endTime)
+                    let actualDate = Date.parse('20 Aug 2000 ' + timeList[i].actualDate)
+                    // 最小， 中间能匹配到， 最大的找不到，就放到最后
+                    if (actualDate < beginTime || (actualDate >= beginTime && actualDate < endTime) || (j == unitTypeList.length - 1 && actualDate >= endTime)) { // 最小 unshift
+                      unitTypeList[j]['reservationTimeClassifyList'].push(timeList[i]);
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      } else {
+        Message.error(res[1].errors ? res[1].errors[0].errorMsg : res[1].msg);
+      }
+      setWeekResult({
+        ...res[1].data, appointmentPanelUnitList
+      });
+    });
+  }
+
+  /**
    * 1、刷新页面需要先选择仓库之后才能加载列表，
    * 2、设置语言包，仓库数据
    * 3、监听下拉，上下切月
@@ -289,8 +368,8 @@ export default injectIntl(({ intl }) => {
     if (mounted.current) {
       setCurrentMonth(getMonth());
       setDays(getDays());
-      if (pageType == PAGE_TYPE[0]) { // 获取周列表
-        getWeekList();
+      if (pageType != 2) { // 获取周和月面板        
+        mockData();
       } else {
         getMonthList();
       }
@@ -298,6 +377,7 @@ export default injectIntl(({ intl }) => {
   }, [initMonth, initWeek, pageType]);
   useEffect(() => {
     getApponitType();
+    queryAvailableNo();
     mounted.current = true;
     if (!warehouseCode.length && whAll.length) {
       setVisible(true)
@@ -305,10 +385,20 @@ export default injectIntl(({ intl }) => {
     }
   }, []);
 
-
   /**
-   * 三种类型的头部信息
+   * 列表，周，月切换清空weekresult数据
    */
+  const changeTab = (key) => {
+    setWeekResult({});
+    setPageType(key * 1);
+  }
+  const navStyle = {
+    textAlign: 'right',
+    display: 'inline-block',
+    position: 'absolute',
+    right: '12px',
+    top: '56px'
+  }
   const ListHead = (
     <div className={styles.calOther}>
       <div className={styles.wh}>
@@ -322,9 +412,11 @@ export default injectIntl(({ intl }) => {
               onClick={() => setVisible(true)}
               name="warehouseName"
               value={warehouseName}
-              style={{ width: 160 }} />
+              style={{ width: 160, marginRight: 16 }} />
           </FormItem>
-          {pageType != PAGE_TYPE[0] &&
+          {pageType != 2 && weekResult.isQueue == 'Y' &&
+            <Button type="primary" onClick={() => weekRef.current.changeApVisible(true)}>{TYPE['R']}</Button>}
+          {pageType == 2 &&
             <>
               <FormItem style={{ marginBottom: 0, marginRight: 0, marginLeft: 12 }}>
                 <Input
@@ -340,11 +432,11 @@ export default injectIntl(({ intl }) => {
         </Form>
       </div>
       <div className={styles.calTimes}>
-        {pageType == PAGE_TYPE[0] && <>
-          <h3>{moment().format('LLLL')}</h3>
+        {pageType == 0 && <>
+          <h3>{moment().format('llll')}</h3>
           <div className={styles.calWeek}>
             <span><CustomIcon type="left"
-              className={isPre() <= 0 ? `${styles.left} ${styles.disabled}` : styles.left}
+              className={styles.left}
               onClick={() => changeWeek(0)} title={lang['fb4.last.week']} />
             </span>
             <span>{currentWeek} {lang['fb4.week']}</span>
@@ -354,7 +446,7 @@ export default injectIntl(({ intl }) => {
             </span>
           </div>
         </>}
-        {pageType == PAGE_TYPE[1] && <>
+        {pageType == 1 && <>
           <h3>{moment().format('LL')} {PAGE_TYPE[1]}</h3>
           <div className={styles.calWeek}>
             <span><CustomIcon type="left" className={styles.left} onClick={() => changeMonth(0)} title={lang['fb4.last.month']} /></span>
@@ -367,17 +459,22 @@ export default injectIntl(({ intl }) => {
             </span>
           </div>
         </>}
-        {pageType == PAGE_TYPE[2] && <h3>{PAGE_TYPE[2]}</h3>}
+        {pageType == 2 && <h3>{PAGE_TYPE[2]}</h3>}
       </div>
-      <div className={styles.utils}>
-        <Select onChange={selectChange} value={pageType} style={{ minWidth: 170 }} label={<CustomIcon type="liebiao" />}>
-          <Select.Option value={PAGE_TYPE[1]}>{PAGE_TYPE[1]}</Select.Option>
-          <Select.Option value={PAGE_TYPE[2]}>{PAGE_TYPE[2]}</Select.Option>
-        </Select>
-        {pageType == PAGE_TYPE[0] &&
-          <Button type="primary" disabled={weekResult.isQueue != 'Y'} onClick={() => weekRef.current.changeApVisible(true)}>{TYPE['R']}</Button>}
-        {pageType != PAGE_TYPE[0] && <span className={styles.span} onClick={() => setPageType(PAGE_TYPE[0])} ><CustomIcon type="shijian" />{PAGE_TYPE[0]}</span>}
-      </div>
+    </div>
+  );
+  const Remark = (
+    <div className={styles.remark}>
+      <span className={`${styles.appointBlock} ${styles.disabledbg}`}></span><span className={styles.text}>{lang['fb4.no.reservation']}</span>
+      <span className={`${styles.appointBlock} ${styles.shohuoBlock}`}></span><span className={styles.text}>{lang['fb4.reservation']}</span>
+      <span className={`${styles.appointBlock} ${styles.zengzhiBlock}`}></span><span className={styles.text}>{lang['fb4.reservation.value.add']}</span>
+      <span className={`${styles.appointBlock} ${styles.paicangBlock}`}></span><span className={styles.text}>{lang['fb4.reservation.warehouse.queue']}</span>
+    </div>
+  );
+  const Remark2 = (
+    <div className={styles.remark}>
+      <span className={`${styles.appointBlock} ${styles.disabledbg}`}></span><span className={styles.text}>{lang['fb4.no.reservation']}</span>
+      <span className={`${styles.appointBlock} ${styles.primarybg}`}></span><span className={styles.text}>{lang['fb4.can.reservation']}</span>
     </div>
   );
 
@@ -386,45 +483,57 @@ export default injectIntl(({ intl }) => {
       <PageHeader
         breadcrumbs={[{ name: lang['fb4.order.iconsignment.reservation'] }, { name: lang['fb4.order.iconsignment.my.reservation'] }]}
       />
-      {Search}
-
       <div className="List">
         {ListHead}
+        {pageType == 0 && Remark}
+        {pageType == 1 && Remark2}
         <globalContext.Provider value={{
           lang,
           CustomIcon,
+          TYPE,
+          ICON,
+          warehouseCode: warehouseCode[0],
+          warehouseName,
+          availableNoList,
+          lists: weekResult,
+          mockData,
           getMonthList
         }}>
-          {
-            pageType == PAGE_TYPE[0] && Object.keys(weekResult).length > 0 &&
-            <Week lists={weekResult} initWeek={initWeek} weekRef={weekRef}
-              warehouseCode={warehouseCode[0]}
-              warehouseName={warehouseName}
-              TYPE={TYPE}
-              ICON={ICON}
-              getWeekList={getWeekList}
-            ></Week>
-          }
-          {
-            pageType == PAGE_TYPE[1] && monthResult.length > 0 &&
-            <Month
-              list={monthResult}
-              initMonth={initMonth}
-              days={days}
-              TYPE={TYPE}
-              ICON={ICON}></Month>
-          }
-          {
-            pageType == PAGE_TYPE[2] && monthResult.length > 0 &&
-            <List
-              list={monthResult}
-              TYPE={TYPE}
-              ICON={ICON}
-            ></List>
-          }
+          <Tab size="small" shape="wrapped" onChange={changeTab} defaultActiveKey={0} navStyle={navStyle} contentStyle={{ marginTop: 16 }}>
+            <Tab.Item title={lang['fpx.list']} key="2">
+              {
+                pageType == 2 && monthResult.length > 0 &&
+                <List
+                  list={monthResult} />
+              }
+            </Tab.Item>
+            <Tab.Item title={lang['fb4.week']} key="0">
+              {
+                pageType == 0 && Object.keys(weekResult).length > 0 &&
+                <Week
+                  lists={weekResult}
+                  initWeek={initWeek} />
+              }
+            </Tab.Item>
+            <Tab.Item title={lang['fb4.month']} key="1">
+              {
+                pageType == 1 && Object.keys(weekResult).length > 0 &&
+                <Month
+                  lists={weekResult}
+                  initMonth={initMonth}
+                  days={days} />
+              }
+            </Tab.Item>
+          </Tab>
+
+          <QueueDialog
+            weekRef={weekRef}
+            queueNumber={weekResult.queueNumber} />
         </globalContext.Provider>
         {WH_Dialog}
       </div>
+
+      {Search}
     </>
   );
 });

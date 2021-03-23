@@ -5,340 +5,80 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 $primary: #21b8c6;
-a:visited {
-  color: #0D57DC;
-}
-a:link {
-  color: #228FFF;
-}
-.next-nav.next-normal .next-menu-sub-menu .next-menu-item.next-selected{
-  background-color: #23282d;
-}
-.next-nav.next-normal .next-menu-sub-menu .next-menu-item.next-selected a {
-  color: $primary;
-}
-.next-nav.next-normal .next-nav-item.next-menu-item:before{
-  background-color: #23282d;
-  width: 0!important;
-}
-.next-nav.next-normal .next-nav-item.next-menu-item.next-child-selected {
-  background-color: #1c2024;
-  color: #fff;
-}
 
-.next-shell-brand .next-shell-header,
-.next-shell-brand .next-shell-header .nav-trigger{
-  background: #373f47;
+/***************** 框架覆盖css start **********************/
+.next-shell-brand .next-shell-header {
+  height: 52px;
 }
-.next-shell-aside.next-shell-navigation{
-  overflow-x: inherit;
-}
-.next-shell-main .next-shell-content-inner{
-  position: relative;
-}
-.next-btn.next-btn-secondary,
-.next-btn.next-btn-secondary:link,
-.next-btn.next-btn-secondary:visited,
-.next-btn.next-btn-secondary.visited{
-  color: $primary !important;
-}
-.next-btn.next-btn-secondary {
-  border-color: $primary !important;
-}
-.next-btn.next-btn-secondary:focus,
-.next-btn.next-btn-secondary:hover,
-.next-btn.next-btn-secondary.hover,
-.next-btn.next-btn-secondary:active,
-.next-btn.next-btn-secondary.active {
-  color: #FFFFFF !important;
-  background-color: $primary !important;
-  border-color: $primary !important;
-}
-.next-input.next-focus{
-  border-color: $primary;
-}
-.next-menu-item.next-selected .next-menu-icon-selected {
-  color: $primary;
-}
-.next-menu-item:not(.next-disabled):hover .next-menu-icon-selected,
-.next-menu-item:not(.next-disabled).next-selected:hover .next-menu-icon-selected,
-.next-menu-item:not(.next-disabled).next-selected.next-focused:hover .next-menu-icon-selected,
-.next-menu-item:not(.next-disabled).next-selected:focus:hover .next-menu-icon-selected,
-.next-menu-item:not(.next-disabled).next-focused .next-menu-icon-selected,
-.next-menu-item:not(.next-disabled).next-selected.next-focused .next-menu-icon-selected,
-.next-menu-item:not(.next-disabled).next-selected:focus .next-menu-icon-selected {
-  color: $primary;
-}
-.next-radio-wrapper.checked .next-radio-inner {
-  border-color: $primary;
-  background: $primary;
-}
-.next-tabs-wrapped.next-tabs-top>.next-tabs-bar .next-tabs-tab:before {
-  border-top: 2px solid $primary;
-}
-.next-tabs-wrapped > .next-tabs-bar .next-tabs-tab.active {
-  color: $primary;
-}
-.next-btn.next-btn-primary:focus,
-.next-btn.next-btn-primary:hover,
-.next-btn.next-btn-primary.hover,
-.next-btn.next-btn-primary:active,
-.next-btn.next-btn-primary.active {
-  background-color: #0D57DC;
-}
-.next-btn.next-btn-primary {
-  background-color: $primary;
-  &.submit{
-    padding: 0 45px;
-    height: 38px;
-  }
-}
-.next-number-picker-inline.next-medium .next-before .next-btn {
-  margin-right: 0;
-  border-right-width: 0;
-}
-.next-number-picker-inline.next-medium .next-after .next-btn {
-  margin-left: 0;
-  border-left-width: 0;
-}
-.next-menu-item{
-  // border-top: 1px solid #fff;
-  // border-bottom: 1px solid #fff;
-  // border-left: 2px solid #fff;
-  // border-right: 2px solid #fff;
-  // border-radius: 3px;
-}
-.next-select-auto-complete-menu .next-menu-item{
-  &.next-focused,
-  &:hover{
-    background-color: #E0EAFC !important;
-    color: $primary !important;
-  }
-}
-.next-calendar-card .next-calendar-cell.next-inrange .next-calendar-date,
-.next-calendar-panel .next-calendar-cell.next-inrange .next-calendar-date,
-.next-calendar-range .next-calendar-cell.next-inrange .next-calendar-date {
-  background: #E0EAFC !important;
-  color: $primary !important;
-  border-color: #E0EAFC !important;
-}
-.next-calendar-card .next-calendar-cell-current .next-calendar-date,
-.next-calendar-card .next-calendar-cell-current .next-calendar-month,
-.next-calendar-card .next-calendar-cell-current .next-calendar-year,
-.next-calendar-panel .next-calendar-cell-current .next-calendar-date,
-.next-calendar-panel .next-calendar-cell-current .next-calendar-month,
-.next-calendar-panel .next-calendar-cell-current .next-calendar-year,
-.next-calendar-range .next-calendar-cell-current .next-calendar-date,
-.next-calendar-range .next-calendar-cell-current .next-calendar-month,
-.next-calendar-range .next-calendar-cell-current .next-calendar-year {
-  color: $primary !important;
-}
-.next-calendar-card .next-calendar-cell.next-selected .next-calendar-date,
-.next-calendar-card .next-calendar-cell.next-selected .next-calendar-month,
-.next-calendar-card .next-calendar-cell.next-selected .next-calendar-year,
-.next-calendar-panel .next-calendar-cell.next-selected .next-calendar-date,
-.next-calendar-panel .next-calendar-cell.next-selected .next-calendar-month,
-.next-calendar-panel .next-calendar-cell.next-selected .next-calendar-year,
-.next-calendar-range .next-calendar-cell.next-selected .next-calendar-date,
-.next-calendar-range .next-calendar-cell.next-selected .next-calendar-month,
-.next-calendar-range .next-calendar-cell.next-selected .next-calendar-year {
-  background: $primary !important;
-  color: #fff !important;
-  border-color: $primary !important;
-}
-.next-calendar-panel-header-left .next-calendar-btn:focus,
-.next-calendar-panel-header-left .next-calendar-btn:hover,
-.next-calendar-panel-header-left .next-calendar-btn.hover,
-.next-calendar-panel-header-left .next-calendar-btn:active,
-.next-calendar-panel-header-left .next-calendar-btn.active,
-.next-calendar-panel-header-right .next-calendar-btn:focus,
-.next-calendar-panel-header-right .next-calendar-btn:hover,
-.next-calendar-panel-header-right .next-calendar-btn.hover,
-.next-calendar-panel-header-right .next-calendar-btn:active,
-.next-calendar-panel-header-right .next-calendar-btn.active,
-.next-calendar-panel-header-full .next-calendar-btn:focus,
-.next-calendar-panel-header-full .next-calendar-btn:hover,
-.next-calendar-panel-header-full .next-calendar-btn.hover,
-.next-calendar-panel-header-full .next-calendar-btn:active,
-.next-calendar-panel-header-full .next-calendar-btn.active {
-  color: inherit !important;
-}
-.next-calendar-btn-prev-year:focus,
-.next-calendar-btn-prev-year:hover,
-.next-calendar-btn-prev-year.hover,
-.next-calendar-btn-prev-year:active,
-.next-calendar-btn-prev-year.active,
-.next-calendar-btn-prev-month:focus,
-.next-calendar-btn-prev-month:hover,
-.next-calendar-btn-prev-month.hover,
-.next-calendar-btn-prev-month:active,
-.next-calendar-btn-prev-month.active,
-.next-calendar-btn-prev-decade:focus,
-.next-calendar-btn-prev-decade:hover,
-.next-calendar-btn-prev-decade.hover,
-.next-calendar-btn-prev-decade:active,
-.next-calendar-btn-prev-decade.active,
-.next-calendar-btn-next-month:focus,
-.next-calendar-btn-next-month:hover,
-.next-calendar-btn-next-month.hover,
-.next-calendar-btn-next-month:active,
-.next-calendar-btn-next-month.active,
-.next-calendar-btn-next-year:focus,
-.next-calendar-btn-next-year:hover,
-.next-calendar-btn-next-year.hover,
-.next-calendar-btn-next-year:active,
-.next-calendar-btn-next-year.active,
-.next-calendar-btn-next-decade:focus,
-.next-calendar-btn-next-decade:hover,
-.next-calendar-btn-next-decade.hover,
-.next-calendar-btn-next-decade:active,
-.next-calendar-btn-next-decade.active {
-  color: inherit !important;
-}
-.next-calendar-fullscreen .next-calendar-date:hover, .next-calendar-fullscreen .next-calendar-month:hover {
-  background: #E0EAFC !important;
-  color: $primary !important;
-  border-color: #E0EAFC !important;
-}
-.next-calendar-card .next-calendar-date:hover, .next-calendar-card .next-calendar-month:hover, .next-calendar-card .next-calendar-year:hover,
-.next-calendar-panel .next-calendar-date:hover,
-.next-calendar-panel .next-calendar-month:hover,
-.next-calendar-panel .next-calendar-year:hover,
-.next-calendar-range .next-calendar-date:hover,
-.next-calendar-range .next-calendar-month:hover,
-.next-calendar-range .next-calendar-year:hover {
-  background: #E0EAFC !important;
-  color: $primary !important;
-  border-color: #E0EAFC !important;
-}
-.next-tabs-pure > .next-tabs-bar .next-tabs-nav-container .next-tabs-tab.active {
-  color: $primary;
-}
-.next-tabs-pure > .next-tabs-bar .next-tabs-nav-container .next-tabs-tab:before {
-  border-bottom: 2px solid $primary;
-}
-.next-pagination .next-pagination-item.next-current {
-  border-color: $primary;
-  background: $primary;
-}
-.next-pagination .next-pagination-item.next-current:hover, .next-pagination .next-pagination-item.next-current:focus {
-  border-color: $primary;
-  color: $primary;
-}
-.next-pagination-size-selector-btn.next-btn-text.next-current {
-  color: $primary;
-}
-.next-btn-text.next-btn-normal:focus, .next-btn-text.next-btn-normal:hover, .next-btn-text.next-btn-normal.hover, .next-btn-text.next-btn-normal:active, .next-btn-text.next-btn-normal.active {
-  color: $primary;
-}
-.next-checkbox-wrapper.indeterminate > .next-checkbox > .next-checkbox-inner, .next-checkbox-wrapper.indeterminate.focused > .next-checkbox > .next-checkbox-inner {
-  background-color: $primary;
-}
-.next-checkbox-wrapper.checked > .next-checkbox > .next-checkbox-inner, .next-checkbox-wrapper.checked.focused > .next-checkbox > .next-checkbox-inner {
-  background-color: $primary;
-}
-.next-checkbox-wrapper:not(.disabled):hover > .next-checkbox > .next-checkbox-inner, .next-checkbox-wrapper.hovered > .next-checkbox > .next-checkbox-inner, .next-checkbox-wrapper.focused > .next-checkbox > .next-checkbox-inner {
-  border-color: $primary;
-  background-color: #E0EAFC;
-}
-.next-checkbox-wrapper.indeterminate:not(.disabled):hover > .next-checkbox .next-checkbox-inner, .next-checkbox-wrapper.indeterminate:not(.disabled).hovered > .next-checkbox .next-checkbox-inner, .next-checkbox-wrapper.checked:not(.disabled):hover > .next-checkbox .next-checkbox-inner, .next-checkbox-wrapper.checked:not(.disabled).hovered > .next-checkbox .next-checkbox-inner {
-  background-color: $primary;
-}
-.next-table-cell-wrapper .next-btn-text{
-  background-color: transparent !important;
-  color: $primary !important;
-}
-.next-table{
-  overflow: auto;
-}
-.next-table table{
-  white-space: nowrap;
-}
-.next-table-empty {
+.next-shell-brand .next-shell-aside.next-shell-navigation{
   padding: 0;
 }
-.next-table-cell-wrapper:empty{
-  &::after{
-    content: "--";
-  }
-}
-.next-shell-navigation.next-shell-nav-left a{
+.next-menu-item-inner a,
+.next-nav.next-primary .next-menu-sub-menu .next-menu-item a{
   color: #Fff;
+  font-size: 14px;
 }
-.next-shell-brand .next-shell-main .next-shell-content{
-  padding: 16px;
-}
-.next-shell-sub-main{
-  overflow-x: hidden;
-  min-height: 100%;
-  height: auto;
-}
-.next-shell-brand .next-shell-aside.next-shell-navigation {
-  background-color: #222d32;
-  border-right:none;
-}
-.next-nav.next-normal .next-nav-item.next-menu-item {
-  color: #989898;
+.next-nav.next-ver .next-menu-item, .next-nav.next-ver .next-menu-sub-menu-wrapper > .next-menu-item{
   border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  box-sizing: border-box;
 }
-.next-nav.next-normal .next-nav-item.next-menu-item.next-focused, 
-.next-nav.next-normal .next-nav-item.next-menu-item:hover,
-.next-nav.next-normal .next-nav-item.next-menu-item.next-opened{
+.next-nav.next-primary .next-nav-item.next-menu-item.next-child-selected {
   color: #ffffff;
   background: #2c3b41;
-  border-left-color: $primary;
+  border-left: 3px solid #21b8c6;
+  border-right: 3px solid transparent;
 }
-.next-nav.next-ver .next-menu-item-inner a {
-  color: #989898;
+.next-menu-item-inner i {
+  margin-right: 6px;
 }
-.next-nav.next-ver .next-menu-item-inner{
-  height: 44px;
-  display: flex;
-    align-items: center;
+.next-nav.next-primary .next-nav-item.next-menu-item:before {
+  background-color: #2c3b41;
 }
-.next-menu .next-menu-icon-arrow.next-icon{
-  top: -4px!important;
+.next-nav.next-primary .next-menu-sub-menu .next-menu-item.next-selected {
+  background-color: #373f47;
+  a{
+    color: #21b8c6;
+  }
 }
-.next-menu-item-text > i {
-  padding-right: 6px;
+.next-input, 
+.next-pagination .next-pagination-item:not([disabled]){
+  border: 1px solid #ddd;
 }
-// .next-shell-brand .next-shell-header {
-//   color: #FFFFFF;
-//   height: 52px;
-//   background: #18263C;
-//   /* border-bottom: 1px solid #EEEEEE; */
-//   /* -webkit-box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.12); */
-//   /* box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.12); */
-//   padding: 0 16px;
-// }
-.next-shell-brand .next-shell-header {
-  border-bottom: none;
-  box-shadow: none;
+.next-nav.next-ver .next-menu-item{
+  padding: 0 10px;
 }
-.next-nav.next-ver .next-menu-item {
-  height: 44px;
+.next-shell-brand .next-shell-aside.next-shell-navigation.next-shell-collapse.next-shell-mini,
+.next-shell-brand .next-shell-aside.next-shell-navigation.next-shell-collapse.next-shell-mini ul {
+  width: 50px!important;
 }
-.next-btn.next-btn-primary:hover{
-  color: #fff;
-  background-color: #21a6b1;
-  border-color: #1e9aa5;
+.next-shell-brand .next-shell-main {
+  background: #f0f3f6;
 }
-.next-breadcrumb {
-  height: auto;
-  line-height: auto;
+.next-menu.next-icon-only .next-menu-item-text span {
+  display: none;
 }
-.next-breadcrumb .next-breadcrumb-item .next-breadcrumb-text {
-  overflow: inherit;
-}
-.next-shell-brand .next-shell-main .next-shell-footer {
-  min-height: 50px;
-  font-size: 14px;
-  background: #fff;
-  color: #444;
-  border-top: 1px solid #d2d6de;
+.next-menu.next-icon-only .next-menu-item-text i{
+  display: block;
+  text-align: center;
+  margin-right: 0;
 }
 
+/***************** 框架覆盖css end **********************/
+
 /***************** 以下是业务模块通用css start **********************/
+.nodata{
+  text-align: center;
+  padding: 32px;
+  color: #21a6b1;
+  i{
+    font-size: 40px;
+  }
+  span{
+    font-size: 16px;
+    padding: 8px 0;
+  }
+}
 .Search{
   background-color: #fff;
   box-shadow: 0 18px 46px rgba(22, 45, 61, 0.06);
@@ -358,6 +98,11 @@ a:link {
       margin: 9px 0;
       color: #888;
       line-height: 22px;
+      display: flex;
+      flex-wrap: wrap;
+      .lispan{
+        flex: 1;
+      }
       b{
         color: #333;
       }
@@ -382,7 +127,7 @@ a:link {
     display: inline-block;
     height: 16px;
     width: 3px;
-    background: #209BFA;
+    background: #21b8c6;
     position: absolute;
     left: 0;
     top: calc(50% - 16px / 2);
@@ -392,6 +137,12 @@ a:link {
   background-color: #fff;
   box-shadow: 0 18px 46px rgba(22, 45, 61, 0.06);
   padding: 16px;
+  margin: 16px 0;
+  position: relative;
+  .Pagination{
+    text-align: center;
+    margin-top: 16px;
+  }
   .add {
     padding-bottom: 15px;
     button {
@@ -415,5 +166,8 @@ a:link {
       color: #5584ff;
     }
   }
+}
+.next-collapse {
+  border: none!important;
 }
 /***************** 以下是业务模块通用css end **********************/

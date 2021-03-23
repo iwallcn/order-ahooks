@@ -4,6 +4,7 @@
   "description": "使用 TypeScript，包含大量 UI 区块，比如图表、表单等。",
   "dependencies": {
     "@alifd/next": "^1.21.0-beta.4",
+    "@alifd/theme-17596": "^0.3.2",
     "@alifd/theme-design-pro": "^0.6.2",
     "@antv/data-set": "^0.10.2",
     "@icedesign/dynamic-icon": "^0.1.8",

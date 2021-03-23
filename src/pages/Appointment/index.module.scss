@@ -20,14 +20,20 @@
     }
   }
 }
-
+.collapse {
+  border: none;
+}
 
 .iconbg {
   background-color: #fff;
   border-radius: 100%;
 }
+.disabledbg{
+  background: #E8E8E8!important;
+  box-shadow: 0px 2px 4px 0px rgba(232, 232, 232, 0.5);
+}
 .shohuobg{
-  background: #5CD627!important;
+  background: #21B8C6!important;
   box-shadow: 0px 2px 4px 0px rgba(58,182,36,0.41);
 }
 .zengzhibg{
@@ -42,8 +48,12 @@
   background: #ED5A82!important;
   box-shadow: 0px 2px 4px 0px rgba(182,133,36,0.41);
 }
+.primarybg{
+  background: #21B8C6;
+  box-shadow: 0px 2px 4px 0px rgba(33, 184, 198, 0.41);
+}
 .shohuo{
-  color: #5CD627;
+  color: #21B8C6;
 }
 .zengzhi{
   color: #FF9B00;
@@ -128,15 +138,19 @@
     background: #FFFFFF;
     border: 1px solid rgba(241,242,249,1);
     box-shadow: 0px 4px 9px 0px rgba(0,0,0,0.08);
-    border-radius: 16px;
-    margin-top: 16px;
     .calHeader{
       display: flex;
       .calTitle {
-        height: 100px;
+        height: 94px;
         border-right: 1px solid #F2F2F2;
         border-bottom: 1px solid #F2F2F2;
         &:first-child {
+          width: 100px;
+          font-size: 20px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          color: red;
           .shijian{
             font-size: 40px;
             color: #A8A8A8;
@@ -172,7 +186,7 @@
       .calLeft{
         width: 100px;
         .calCol{
-          height: 117px;
+          height: 94px;
           color: #333;
           font-size: 20px;
           display: flex;
@@ -190,17 +204,16 @@
         .calCol {
           width: calc(100% / 7);
         }
-
         .calCell{
-          height: 110px;
+          height: 90px;
           display: flex;
           justify-content: center;
           flex-wrap: wrap;
           border-radius: 16px;
-          border-top: 4px solid #C3E7EB;
-          background: -webkit-linear-gradient(#F6FEFF,#FFF);
           margin: 4px;
-          align-content: space-around;
+          position: relative;
+          border-radius: 16px;
+          align-items: center;
           h6{
             width: 100%;
             margin: 12px 0 0 0;
@@ -229,6 +242,7 @@
             text-overflow: ellipsis;
             overflow: hidden;
             white-space: nowrap;
+            height: 30px;
             i{
               margin-right: 4px;
             }
@@ -238,8 +252,6 @@
           background: #F2F2F2;
           border-top: 4px solid #E8E8E8;
           font-size: 14px;
-          color: #333;
-          font-weight: bold;
           align-content: center;
         }
         .kx {
@@ -284,11 +296,12 @@
       flex-wrap: wrap;
       .calCell {
         border: 2px solid transparent;
-        height: 136px;
+        height: 124px;
         width: calc(100% / 7);
         border-right: 1px solid #f1f2f9;
         border-bottom: 1px solid #f1f2f9;
         overflow: hidden;
+        border-radius: 16px;
         h4{
           font-size: 20px;
           width: 34px;
@@ -298,6 +311,7 @@
           align-items: center;
           border-radius: 50%;
           margin: 4px 4px 0 4px;
+          cursor: pointer;
           &.disabled {
             color: #ddd;
           }
@@ -309,15 +323,9 @@
           align-items: center;
           border-left: 4px solid transparent;
           padding-left: 10px;
-          position: relative;
+          // position: relative;
           span{
             margin-right: 8px;
-          }
-          .point {
-            width: 8px;
-            height: 8px;
-            background: #C3C3C3;
-            border-radius: 50%;
           }
           .time{
             color: #C3C3C3;
@@ -338,8 +346,7 @@
           }
         }
         &.today{
-          background: linear-gradient(#F6FEFF, #FFF);
-          border: 2px solid rgba(33,184,198,1);
+          border: 2px solid rgba(33,184,198,1)!important;
           border-radius: 16px;
           h4 {
             background: rgba(33,184,198,1);
@@ -347,6 +354,45 @@
           }
         }
       }
+    }
+  }
+  .cmlpoint{
+    position: absolute;
+    left: -10px;
+    top: 40%;
+  }
+  .cml {
+    width: 100%;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    margin: 4px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .point {
+      width: 8px;
+      height: 8px;
+      background: #C3C3C3;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+    }
+    i{
+      color: #B2B2B2;
+      cursor: pointer;
+      padding: 4px 3px;
+      display: inline-block;
+    }
+  }
+  .cmlform{
+    display: flex;
+    align-items: flex-end;
+    position: relative;
+    .point_p{
+      position: absolute;
+      left: -10px;
+      top: 12px;
     }
   }
 .whDialog {
@@ -394,7 +440,7 @@
       color: #cccccc;
     }
     .label{
-      background: #5CD627;
+      background: #21B8C6;
       border-radius: 0 10px 10px 0;
       padding: 2px 16px;
       color: #fff;
@@ -460,7 +506,7 @@
     .calItem{
       flex: 0 0.5 auto;
       width: calc((100% - 24px) / 2);
-      padding: 8px;
+      padding: 8px 8px 0 8px;
       margin: 8px;
       border: 1px solid transparent;
       border-radius: 8px;
@@ -518,4 +564,127 @@
     }
   }
 }
+.point {
+  width: 8px;
+  height: 8px;
+  background: #C3C3C3;
+  border-radius: 50%;
+  display: inline-block;
+}
+.rulesDt{
+  display: flex;
+  .rulesDl{
+    margin: 0 8px 0 0;
+    position: relative;
+    .rulesText{
+      padding-left: 4px;
+    }
+    span{
+      &:nth-child(2n),
+      &:nth-child(3n){
+        padding-left: 4px;
+      }
+    }
+  }
+}
 /***************** 预约面板 css end **********************/
+.tab .next-tabs-nav{
+  float: right;
+}
+.remark {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 14px 0 0 0;
+    position: absolute;
+    right: 0px;
+    top: 12px;
+  .appointBlock {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+  }
+  .text {
+    margin: 0 12px 0 6px;
+    font-size: 12px;
+  }
+}
+.disabledCell {
+  background: #F2F2F2;
+  border-top: 4px solid #E8E8E8!important;
+}
+.blueCell {
+  border-top: 4px solid #c3e7eb!important;
+  background: -webkit-linear-gradient(#f6feff,#fff);
+  cursor: pointer;
+}
+.calCmls{
+  height: calc(100% - 34px);
+  .cml {
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+    padding-left: 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+  }
+  .cmlmore {
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+    padding-left: 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+.cmlOverflow {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+.S{
+  cursor: pointer;
+  // border-top: 4px solid rgba(33,184,198,0.3) !important;
+  // background: -webkit-linear-gradient(rgba(33,184,198,0.2), #fff);
+  border-top: 4px solid rgba(33,184,198,0.3) !important;
+  background: -webkit-linear-gradient( rgba(33,184,198,0.2), #fff);
+}
+.V {
+  border-top: 4px solid rgba(255,155,0,0.3) !important;
+  background: -webkit-linear-gradient(rgba(255,155,0,0.2), #fff);
+  cursor: pointer;
+}
+.W{
+  border-top: rgba(123,60,255,0.3) !important;
+  background: -webkit-linear-gradient(rgba(123,60,255,0.2), #fff);
+  cursor: pointer;
+}
+.R{
+  border-top: rgba(237,90,130,0.3) !important;
+  background: -webkit-linear-gradient(rgba(237,90,130,0.2), #fff);
+  cursor: pointer;
+}
+.E{
+  border-top: rgba(123, 60, 255, 0.5) !important;
+  background: -webkit-linear-gradient(rgba(123, 60, 255, 0.1), #fff);
+  cursor: pointer;
+}
+.shohuoBlock{
+    border-top: 4px solid rgba(33,184,198,0.3) !important;
+    background: -webkit-linear-gradient( rgba(33,184,198,0.2), #fff);
+}
+.zengzhiBlock{
+  border-top: 4px solid rgba(255,155,0,0.3) !important;
+  background: -webkit-linear-gradient(rgba(255,155,0,0.2), #fff);
+}
+.paicangBlock{
+  border-top: rgba(123,60,255,0.3) !important;
+  background: -webkit-linear-gradient(rgba(123,60,255,0.2), #fff);
+}

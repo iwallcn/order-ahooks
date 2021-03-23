@@ -1,19 +1,20 @@
-import React, { useState, useEffect, useContext, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { injectIntl } from 'react-intl';
-import { Field, Form, Button, Dialog, Tab, Select, DatePicker, Input, Message } from '@alifd/next';
+import { Dialog } from '@alifd/next';
 import moment from 'moment';
 import styles from './index.module.scss';
 import globalContext from '@/contexts/globalContext';
-import API from './api';
 import Cookies from 'js-cookie';
+import CmlNoInput from './cmlNoInput';
+import DialogAppoint from './dialogAppoint';
 
-const FormItem = Form.Item;
-
-export default injectIntl(({ intl, lists, initWeek, weekRef, warehouseCode, warehouseName, TYPE, ICON, getWeekList }) => {
+export default injectIntl(({ intl, lists, initWeek }) => {
+  console.log(lists, '周面板组装数据')
+  const weekRef: any = useRef();
+  const { CustomIcon, ICON } = useContext(globalContext);
+  const cmlNoRef: any = useRef(null);
   const isArrangement = lists.isArrangement;
-  const { CustomIcon } = useContext(globalContext);
   const lang = window.GLOBAL_LANG;
-  const apField = Field.useField({ values: {} });
   const [appointObj, setAppointObj] = useState({
     appointmentTime: '',
     appointmentType: '',
@@ -21,40 +22,9 @@ export default injectIntl(({ intl, lists, initWeek, weekRef, warehouseCode, ware
     endTime: ''
   }); // 当前点击的格子
 
-  const [apVisible, setApVisible] = useState(false); // 预约弹窗
-  const [pdVisible, setPdVisible] = useState(false); // 排队弹窗
   const [weekDay, setWeekDay] = useState({}); // 计算每周的日期和星期 {'周日':'12-07', ...}
   const timeNow: any = new Date(); // 当前时间
   const weekOfday: any = moment(timeNow).format('E'); // 计算今天是这周第几天 4
-  // 控制排队弹窗
-  useImperativeHandle(weekRef, () => ({
-    changeApVisible: (newVal) => {
-      setPdVisible(newVal);
-    }
-  }));
-  // order；已经过去的日期，就不允许预约了
-  const overdue = (d) => {
-    return moment().valueOf() - moment(d).valueOf()
-  }
-
-  // 查询客预约单号
-  const [availableNoList, setAvailableNoList] = useState([]);
-  const queryAvailableNo = () => {
-    API.queryAvailableNo().then(res => {
-      if (res.success) {
-        res.data.map(val => {
-          let obj = {
-            value: val,
-            key: val
-          }
-          availableNoList.push(obj);
-        })
-        setAvailableNoList(availableNoList);
-      } else {
-        Message.error(res.errors ? res.errors[0].errorMsg : res.msg);
-      }
-    })
-  }
 
   // 动态获取第几周的第几天
   const calWeekOfday = (w, d) => {
@@ -67,7 +37,6 @@ export default injectIntl(({ intl, lists, initWeek, weekRef, warehouseCode, ware
     lang['fb4.html.Wednesday'], lang['fb4.html.Thursday'], lang['fb4.html.Friday'], lang['fb4.html.Saturday']];
     let everyWeek = {};
     if (Cookies.get('lang') == 'zh' || Cookies.get('lang') == undefined) {
-      console.log(987)
       everyWeek = {
         [weekDay[1]]: calWeekOfday(initWeek, 0),
         [weekDay[2]]: calWeekOfday(initWeek, 1),
@@ -107,7 +76,8 @@ export default injectIntl(({ intl, lists, initWeek, weekRef, warehouseCode, ware
     return (
       <>
         <div className={styles.calTitle}>
-          <CustomIcon size="s" type="shijian" className={styles.shijian} />
+          {lists.isQueue == 'Y' && lang['fb4.reservation.full']}
+          {lists.isQueue == 'N' && <CustomIcon size="s" type="shijian" className={styles.shijian} />}
         </div>
         {
           weekDay && Object.keys(weekDay).map((val, key) => {
@@ -157,329 +127,289 @@ export default injectIntl(({ intl, lists, initWeek, weekRef, warehouseCode, ware
 
   /**
    * 渲染七天所有格子: 纵向一条一条的遍历
-   * 1.先根据isArrangement判断是否排仓，如果是排仓Y，
-   *      则一周面板的最底部一行全部显示排仓，其他格子全部都是约满
-   * 2.再根据isQueue判断是否排队，如果是排队，则其他格子全部都是约满，然后排队按钮可用
-   * 3.如果上面两个字段都是N，则正常遍历
+   * 不可预约判断包含：日期是否已经过期，日期是否设置了不可预约，日期是否大于最远日期
    */
   const renderCol = () => {
-    return Object.keys(lists['appointmentPanelUnitList']).map((key, index) => {
-      const obj = lists['appointmentPanelUnitList'][key];
-      // 已经过去的日期，不包含今天
-      if (overdue(obj.appointmentTime) >= 0 && obj.appointmentTime != moment().format('YYYY-MM-DD')) {
+    return Object.keys(lists['appointmentPanelUnitList']).map(index => {
+      let appointmentPanelUnitList = lists['appointmentPanelUnitList'], obj = appointmentPanelUnitList[index], unitTypeList = obj.unitTypeList;
+      let disable = lists['appointmentPanelUnitList'][index]['isAppointment'] == 'N' ||
+        moment(obj.appointmentTime).startOf('day').valueOf() > moment(lists.maxReservationDate).startOf('day').valueOf();
+
+      // 取得任意一个天不为空的时间段
+      let tempTime: any = [];
+      for (let i = 0; i < appointmentPanelUnitList.length; i++) {
+        if (appointmentPanelUnitList[i].unitTypeList && appointmentPanelUnitList[i].unitTypeList.length) {
+          tempTime = appointmentPanelUnitList[i].unitTypeList;
+          break;
+        }
+      }
+      let mapArr = unitTypeList ? unitTypeList : tempTime;
+      if (lists.isArrangement == 'Y') { // 排仓遍历
         return (
-          <div className={styles.calCol} key={key}>
-            { renderNoAppointment(lists['appointmentPanelUnitList'], obj, 1)}
+          <div className={styles.calCol} key={index}>
+            {renderPaicang(obj, mapArr, disable)}
+          </div>
+        );
+      } else if (lists.isQueue == 'Y') { // 排队遍历
+        return (
+          <div className={styles.calCol} key={index}>
+            {renderQueue(obj, mapArr)}
+          </div>
+        );
+      } else {
+        return (
+          <div className={styles.calCol} key={index}>
+            {renderCell(obj, mapArr, disable)}
+          </div>
+        );
+      }
+    });
+  };
+
+  /**
+   * * 排仓情况：
+   *  如果日期比今天小，或者该日期设置了不可预约，则灰色显示，无排仓按钮，单号显示同下；
+      如果日期是今天之后包含今天，并且日期在最远可约日期范围内，则蓝色显示，有排仓按钮，单号显示同下；
+      单号显示规则：有单号则显示单号，单号最多显示2行，超过采用还有xx项；
+      点击每个单号显示单号，可以换柜和取消；点击还有XX项，则显示所有单号，可以换柜和取消。
+   * @param obj  某一天的数据
+   * @param mapArr  一天中的时间段集合
+   * @param disable  该天是否可预约
+   */
+  const renderPaicang = (obj, mapArr, disable) => {
+    return Object.keys(mapArr).map((val, index) => {
+      let item = mapArr[index], appointmentType = item.appointmentType, reservationTimeClassifyList = item.reservationTimeClassifyList;
+      // 排仓有数据的情况下：先判断外层类型，然后再判断是否可以排仓预约
+      if (reservationTimeClassifyList) {
+        let count = computeCml(reservationTimeClassifyList);
+        if (disable || index < mapArr.length - 1) { // 如果已经过期或者设置了不可预约，或者不是一列的最后一个格子,则只显示单号
+          return (
+            <div className={`${styles.calCell} ${styles.full}`} key={index}>
+              {reservationTimeClassifyList && renderCml(obj.appointmentTime, reservationTimeClassifyList, count)}
+            </div>
+          )
+        } else { // 显示单号并且有排仓按钮
+          return (
+            <div className={`${styles.calCell} ${styles['E']}`} key={index} onClick={() => handleAppointDialog(obj.appointmentTime, item)}>
+              {reservationTimeClassifyList && renderCml(obj.appointmentTime, reservationTimeClassifyList, count)}
+            </div>
+          )
+        }
+      } else {
+        // 排仓没有数据的情况：判断是否是过去的日期，并且是否遵循规则：最底部都是预约
+        if (disable || index < mapArr.length - 1) { // 如果已经过期或者设置了不可预约
+          return <div className={`${styles.calCell} ${styles.full}`} key={Math.random()}></div>
+        } else { // 没有过期，判断是否是当天最后一个，最后一个要出现排仓按钮，非最后一个全部灰色背景
+          return <div className={`${styles.calCell} ${styles['E']}`} key={index} onClick={() => handleAppointDialog(obj.appointmentTime, item)} />
+        }
+      }
+    });
+  };
+
+  /**
+   *  * 排队情况：
+   *  每个格子都是灰色，没有按钮；有单号就显示
+   * @param obj 
+   * @param mapArr 
+   */
+  const renderQueue = (obj, mapArr) => {
+    return Object.keys(mapArr).map(index => {
+      let item = mapArr[index], reservationTimeClassifyList = item.reservationTimeClassifyList;
+      if (reservationTimeClassifyList) {
+        let count = computeCml(reservationTimeClassifyList);
+        return (
+          <div className={`${styles.calCell} ${styles.full}`} key={index}>
+            {reservationTimeClassifyList && renderCml(obj.appointmentTime, reservationTimeClassifyList, count)}
           </div>
         )
       } else {
-        if (lists.isArrangement == 'Y') { // 排仓遍历
-          return (
-            <div className={styles.calCol} key={key}>
-              {/* {index == 0 && renderNoAppointment(obj, 1)}
-              {index != 0 && renderPaicang(obj)} */}
-              {renderPaicang(lists['appointmentPanelUnitList'], obj)}
-            </div>
-          );
-        } else if (lists.isQueue == 'Y') { // 排队遍历
-          return (
-            <div className={styles.calCol} key={key}>
-              {index == 6 && renderNoAppointment(lists['appointmentPanelUnitList'], obj, 0)}
-              {index != 6 && renderNoAppointment(lists['appointmentPanelUnitList'], obj, 1)}
-            </div>
-          );
-        } else {
-          return (
-            <div className={styles.calCol} key={key}>
-              {renderCell(lists['appointmentPanelUnitList'], obj)}
-            </div>
-          );
-        }
+        return <div className={`${styles.calCell} ${styles.full}`} key={index}></div>
       }
-    });
-  };
-
-  // 渲染不可预约和排仓情况
-  const renderNoAppointment = (unitList, obj, type) => {
-    let str = type ? lang['fb4.no.reservation'] : lang['fb4.reservation.full'];
-    let tempTime: any = [];
-    for (let i = 0; i < unitList.length; i++) {
-      if (unitList[i].unitTypeList && unitList[i].unitTypeList.length) {
-        tempTime = unitList[i].unitTypeList;
-      }
-    }
-    return Object.keys(tempTime).map(val => {
-      return <div className={`${styles.calCell} ${styles.full}`} key={val}>{str}</div>
     });
   }
 
-  // 渲染排仓 TODO
-  const renderPaicang = (unitList, obj) => {
-    let list = obj.unitTypeList;
-
-    // 取得任意一个天不为空的时间段
-    let tempTime: any = [];
-    for (let i = 0; i < unitList.length; i++) {
-      if (unitList[i].unitTypeList && unitList[i].unitTypeList.length) {
-        tempTime = unitList[i].unitTypeList;
-        break;
-      }
-    }
-    return Object.keys(tempTime).map((val, index) => {
-      // 如果日期大于最远日期，或者某一天设置了不可预约
-      if (moment(obj.appointmentTime).valueOf() - moment(lists.maxReservationTime).valueOf() > 0 || obj.isAppointment == 'N') {
-        return <div className={`${styles.calCell} ${styles.full}`} key={index}>{lang['fb4.no.reservation']}</div>
-      } else {
-        if (index < tempTime.length - 1) { // 排满
-          return <div className={`${styles.calCell} ${styles.full}`} key={Math.random()}>{lang['fb4.reservation.full']}</div>
-        } else { // 最后一个格子是排仓
+  /**
+   * 普通情况：
+   *  如果日期比今天小，或者该日期设置了不可预约，则灰色显示，无按钮，单号显示同上；
+      如果日期是今天之后包含今天，并且日期在最远可约日期范围内，则蓝色显示，有按钮（根据类型来判断是什么预约按钮），单号显示同上；
+      单号显示规则：有单号则显示单号，单号最多显示2行，超过采用还有xx项；
+      点击每个单号显示单号，可以换柜和取消；点击还有XX项，则显示所有单号，可以换柜和取消。
+   */
+  const renderCell = (obj, mapArr, disable) => {
+    // console.log(obj, mapArr, disable)
+    return Object.keys(mapArr).map((val, index) => {
+      let item = mapArr[index], appointmentType = item.appointmentType, reservationTimeClassifyList = item.reservationTimeClassifyList;
+      // 如果有数据，是满并且不可约，则灰色背景展示数据；不是满，则展示单号可点击格子
+      if (reservationTimeClassifyList) {
+        let count = computeCml(reservationTimeClassifyList);
+        if (appointmentType == 'E' || disable) {
           return (
-            <div className={`${styles.calCell}`} key={index}>
-              <h6>{lang['fb4.free']}</h6>
-              <Button className={styles.btn} onClick={() => handleAppointDialog(obj.appointmentTime, list ? list[index] : tempTime[index])}>
-                <CustomIcon type="paicang" size="S" className={`${styles.paicang} ${styles.iconbg}`} />
-                {TYPE['W']}
-              </Button>
+            <div className={`${styles.calCell} ${styles.full}`} key={index}>
+              {reservationTimeClassifyList && renderCml(obj.appointmentTime, reservationTimeClassifyList, count)}
+            </div>
+          )
+        } else {
+          return (
+            <div className={`${styles.calCell} ${styles[appointmentType]}`} key={index} onClick={() => handleAppointDialog(obj.appointmentTime, item)}>
+              {reservationTimeClassifyList && renderCml(obj.appointmentTime, reservationTimeClassifyList, count)}
             </div>
           )
         }
+      } else { // 没有数据的情况下：先判断外层类型，然后再判断是否可以预约
+        if (appointmentType == 'E' || disable) {
+          return <div className={`${styles.calCell} ${styles.full}`} key={index}></div>
+        } else {
+          return <div className={`${styles.calCell} ${styles[appointmentType]}`} key={index} onClick={() => handleAppointDialog(obj.appointmentTime, item)} />
+        }
       }
     });
-  };
+  }
 
-  // 普通情况：遍历每列的格子
-  const renderCell = (unitList, obj) => {
-    // 取得任意一个天不为空的时间段
-    let tempTime: any = [];
-    for (let i = 0; i < unitList.length; i++) {
-      if (unitList[i].unitTypeList && unitList[i].unitTypeList.length) {
-        tempTime = unitList[i].unitTypeList;
-        break;
-      }
+  // 计算每天每个格子有多少个单号数量
+  const computeCml = (reservationTimeClassifyList) => {
+    let count = 0;
+    if (!reservationTimeClassifyList || !reservationTimeClassifyList.length) {
+      return 0;
     }
-    if (obj.isAppointment == 'N') { // 不可预约
-      return Object.keys(tempTime).map((val, index) => {
-        return <div className={`${styles.calCell} ${styles.full}`} key={index}>{lang['fb4.no.reservation']}</div>
-      });
-    } else {
-      return Object.keys(obj.unitTypeList).map((val, index) => {
-        let item = obj.unitTypeList ? obj.unitTypeList[index] : {};
-        let appointmentType = item.appointmentType;
-        if (item.appointmentType == 'E') { // 表示这个格子约满
-          return <div className={`${styles.calCell} ${styles.full}`} key={index}>{lang['fb4.reservation.full']}</div>
-        } else {
-          return (
-            <div className={`${styles.calCell}`} key={index}>
-              <h6>{lang['fb4.free']}</h6>
-              <Button className={styles.btn} onClick={() => handleAppointDialog(obj.appointmentTime, item)}>
-                <CustomIcon type="shohuo" size="S" className={`${styles[ICON[appointmentType]]} ${styles.iconbg}`} />
-                {TYPE[appointmentType]}
-              </Button>
+    for (let i = 0; i < reservationTimeClassifyList.length; i++) {
+      let map = reservationTimeClassifyList[i]['reservationTypeMap'];
+      Object.keys(map).map(v => {
+        count += map[v].length;
+      })
+    }
+    return count;
+  }
+  // 点击单行或者还有XX项，弹窗
+  const [iscml, setIscml] = useState(false);
+  const [reservationTimeClassifyList, setReservationTimeClassifyList] = useState([]);
+  const [cmlObj, setCmlObj] = useState('');
+  const [appointmentTime, setAppointmentTime] = useState('');
+  const [type, setType] = useState('');
+  /**
+   * 当前天， 当前时间段的list为了方便取时间点，当前点击数据项，当前点击的是几条索引
+   * 2021-01-24 [{},{}], {}, R, 0
+   */
+  const editCmlSingle = (appointmentTime, reservationTimeClassifyList, obj, k, i) => {
+    setAppointmentTime(appointmentTime);
+    setReservationTimeClassifyList(reservationTimeClassifyList);
+    setCmlObj(obj);
+    setType(k);
+    setIscml(true)
+  }
+  // 关闭
+  const closeEditDialog = () => {
+    setIscml(false)
+    cmlNoRef.current.changeDisabled();
+  };
+  const EDIT_Dialog = () => {
+    return (
+      <Dialog
+        style={{ width: 300 }}
+        title={appointmentTime}
+        visible={iscml}
+        footerActions={[]}
+        onCancel={() => setIscml(false)}
+        onClose={() => setIscml(false)}>
+        {cmlObj &&
+          <>
+            <div className={styles.cml}>
+              <CmlNoInput
+                ICON={ICON}
+                type={type}
+                cmlNoRef={cmlNoRef}
+                data={cmlObj}
+                setIscml={setIscml}
+                closeEditDialog={closeEditDialog}
+              />
             </div>
-          )
+          </>
         }
-      });
-    }
+        {!cmlObj &&
+          <>
+            {
+              Object.keys(reservationTimeClassifyList).map(i => {
+                let map = reservationTimeClassifyList[i]['reservationTypeMap'];
+                return Object.keys(map).map((k, i) => {
+                  return Object.keys(map[k]).map((j, index) => {
+                    return (
+                      <div className={styles.cml} key={j}>
+                        <CmlNoInput
+                          ICON={ICON}
+                          type={k}
+                          cmlNoRef={cmlNoRef}
+                          data={map[k][j]}
+                          setIscml={setIscml}
+                          closeEditDialog={closeEditDialog}
+                        />
+                      </div>
+                    )
+                  })
+                })
+              })
+            }
+          </>
+        }
+      </Dialog>
+    )
   }
-  const disabledDate = (date, view) => {
-    // 当前切换周的最后一天
-    // let currentDate: any = moment().add(initWeek, 'week').endOf('week');
-    const currentDate = moment();
-    switch (view) {
-      case 'date':
-        return date.valueOf() < currentDate.valueOf();
-      case 'year':
-        return date.year() < currentDate.year();
-      case 'month':
-        return date.year() * 100 + date.month() < currentDate.year() * 100 + currentDate.month();
-      default: return false;
+  /**
+   * 当前天， 当前时间段的list，为了方便取时间点，当前时间点总共有多少条数据，当前点击的是几条
+   * @param appointmentTime 
+   * @param reservationTimeClassifyList 
+   * @param count 
+   * @param i 
+   */
+  const renderCml = (appointmentTime, reservationTimeClassifyList, count) => {
+    if (reservationTimeClassifyList == undefined || !reservationTimeClassifyList.length) {
+      return ''
     }
+    let start = 0;
+    return Object.keys(reservationTimeClassifyList).map((v, i) => {
+      let mapList = reservationTimeClassifyList[v].reservationTypeMap;
+      return Object.keys(mapList).map((v, index) => {
+        let color = `${ICON[v]}bg`;
+        return Object.keys(mapList[v]).map((k, i) => {
+          if (start < 2) {
+            start++;
+            let _cml = mapList[v][k].cmlNo || mapList[v][k].deliveryCode;
+            return (
+              <div className={styles.cml} key={i} onClick={(e) => {
+                e.stopPropagation();
+                editCmlSingle(appointmentTime, reservationTimeClassifyList, mapList[v][k], v, i)
+              }}>
+                <span className={`${styles.point} ${styles[color]}`}></span>
+                <span className={styles.cmlOverflow} title={_cml}>{_cml}</span>
+              </div>
+            )
+          } else if (start == 2) {
+            start++;
+            return <div className={styles.cml} key={i} onClick={(e) => {
+              e.stopPropagation();
+              editCmlSingle(appointmentTime, reservationTimeClassifyList, '', v, i)
+            }}>{lang['fpx.also']}{count - start + 1}{lang['fpx.item']}</div>
+          } else {
+            return ''
+          }
+        })
+      })
+    })
   }
+
   // 点击预约按钮
   const handleAppointDialog = (appointmentTime, item) => {
-    console.log(appointmentTime, item)
     if (isArrangement == 'Y') { // 排仓
       setAppointObj({ ...item, appointmentTime, appointmentType: 'W' });
     } else {
       setAppointObj({ ...item, appointmentTime });
     }
-    setApVisible(true);
+    weekRef.current.changeApVisible(true)
   }
-
-  // 点击确认预约
-  const submitOK = (type) => {
-    apField.validate((errors, values) => {
-      if ((!values['consignmentNos'] && !values['cmlNo']) || (values['consignmentNos'] && values['cmlNo'])) {
-        return Message.warning(lang['fb4.only.cabinet.ic']);
-      }
-      let arr: any = []
-      if (values['consignmentNos']) {
-        arr = values['consignmentNos'].split(/\n/);
-        for (let v in arr) {
-          arr[v] = arr[v].trim();
-        }
-      }
-      let data: any = {
-        consignmentNos: values['consignmentNos'] ? arr : '',
-        cmlNo: values['cmlNo'],
-        toWarehouseCode: warehouseCode
-      }
-      if (type == 'P') { // 普通预约
-        data.actualDate = moment(appointObj.appointmentTime).add(appointObj.beginTime, 'h').format('YYYY-MM-DD HH:mm');
-        data.reservationType = appointObj.appointmentType;
-        API.confirm(data).then(res => {
-          if (res.success) {
-            getWeekList();
-            Dialog.confirm({
-              title: lang['fb4.reminder'],
-              content: res.msg,
-              footerActions: [],
-              onClose: () => setApVisible(false),
-              onCancel: () => console.log('onCancel')
-            });
-          } else {
-            Dialog.confirm({
-              title: lang['fb4.reminder'],
-              content: res.errors ? res.errors[0].errorMsg : res.msg,
-              footerActions: [],
-              onCancel: () => console.log('onCancel')
-            });
-          }
-        });
-      } else { // 排队预约
-        data.actualDate = values['actualDate'];
-        API.queue(data).then(res => {
-          if (res.success) {
-            getWeekList();
-            Dialog.confirm({
-              title: lang['fb4.reminder'],
-              content: res.msg,
-              footerActions: [],
-              onClose: () => setPdVisible(false),
-              onCancel: () => console.log('onCancel')
-            });
-          } else {
-            Dialog.confirm({
-              title: lang['fb4.reminder'],
-              content: res.errors ? res.errors[0].errorMsg : res.msg,
-              footerActions: [],
-              onCancel: () => console.log('onCancel')
-            });
-          }
-        })
-      }
-    });
-  };
-
-  // 排队预约弹出框
-  const PD_Dialog = (
-    <Dialog className={styles.whDialog}
-      title={TYPE['R']}
-      visible={pdVisible}
-      onOk={() => submitOK('R')}
-      onCancel={() => setPdVisible(false)}
-      onClose={() => setPdVisible(false)}>
-      <Form field={apField} labelAlign="left">
-        <div className={styles.apDr}>
-          <span>{lang['fb4.this.time.full']}</span>
-        </div>
-        <div className={styles.apDr}>
-          <CustomIcon type="cangku" size="s" />
-          {lang['fb4.warehouse']}: <span>{warehouseName}-{warehouseCode}</span>
-          <span className={styles.numbers}>{lang['fb4.current.queue.number']}：{lists.queueNumber}</span>
-        </div>
-        <div className={styles.apDr}>
-          <FormItem required>
-            <DatePicker style={{ width: '100%' }} label={lang['fb4.expected.delivery.time']} name="actualDate" disabledDate={disabledDate} />
-          </FormItem>
-        </div>
-        <Tab shape="wrapped" size="small">
-          <Tab.Item title={lang['fb4.cml.no']} key="1">
-            <FormItem required>
-              <Select.AutoComplete
-                style={{ width: '100%' }}
-                name="cmlNo"
-                placeholder={lang['fb4.select.cabinet.tip']}
-                hasClear
-                dataSource={availableNoList} />
-            </FormItem>
-          </Tab.Item>
-          <Tab.Item title={lang['fb4.consignmentNo']} key="2">
-            <FormItem required >
-              <Input.TextArea name="consignmentNos"
-                autoHeight={{ minRows: 3, maxRows: 6 }}
-                style={{ width: '100%' }}
-                placeholder={lang['fb4.select.ic.tip']} />
-            </FormItem>
-          </Tab.Item>
-        </Tab>
-      </Form>
-    </Dialog>
-  );
-
-  // 预约弹出框
-  const AP_Dialog = (
-    <Dialog className={styles.whDialog}
-      title={TYPE[appointObj.appointmentType]}
-      visible={apVisible}
-      onOk={() => submitOK('P')}
-      onCancel={() => setApVisible(false)}
-      onClose={() => setApVisible(false)}>
-      <Form field={apField} labelAlign="left">
-        {appointObj.appointmentType == 'W' &&
-          <div className={styles.apDr}>
-            <span>{lang['fb4.period.full.tip']}</span>
-          </div>
-        }
-        {appointObj.appointmentType == 'V' &&
-          <div className={styles.apDr}>
-            <span>{lang['fb4.current.booking.tip']}</span>
-          </div>
-        }
-        <div className={styles.apDr}>
-          <CustomIcon type="cangku" size="s" />
-          {lang['fb4.warehouse']}: <span>{warehouseName}-{warehouseCode}</span>
-        </div>
-        <div className={styles.apDr}>
-          <CustomIcon type="shijian" size="s" />
-          {lang['fb4.receiving.time']}: <span>{appointObj.appointmentTime} {appointObj.beginTime}</span>
-          {
-            lists.queueNumber > 0 &&
-            <span className={styles.numbers}>{lang['fb4.current.warehouse.queue.number']}：{lists.queueNumber}</span>
-          }
-        </div>
-        <Tab shape="wrapped" size="small">
-          <Tab.Item title={lang['fb4.cml.no']} key="1">
-            <FormItem required>
-              <Select.AutoComplete
-                style={{ width: '100%' }}
-                name="cmlNo"
-                placeholder={lang['fb4.select.cabinet.tip']}
-                hasClear
-                dataSource={availableNoList} />
-            </FormItem>
-          </Tab.Item>
-          <Tab.Item title={lang['fb4.consignmentNo']} key="2">
-            <FormItem required >
-              <Input.TextArea name="consignmentNos"
-                autoHeight={{ minRows: 3, maxRows: 6 }}
-                style={{ width: '100%' }}
-                placeholder={lang['fb4.select.ic.tip']} />
-            </FormItem>
-          </Tab.Item>
-        </Tab>
-      </Form>
-    </Dialog>
-  );
 
   /**
    * 加载当前客户的所有柜号
    * 获取周日-周六标题数据
    */
   useEffect(() => {
-    if (!availableNoList.length) {
-      queryAvailableNo();
-    }
     calcWeekDay();
   }, [initWeek]);
 
@@ -496,47 +426,16 @@ export default injectIntl(({ intl, lists, initWeek, weekRef, warehouseCode, ware
           </div>
           <div className={styles.calRight}>
             {renderCol()}
-            {/* <div className={styles.calCol}>
-                <div className={`${styles.calCell} ${styles.full}`}>不可预约</div>
-              </div>
-              <div className={styles.calCol}>2</div>
-              <div className={styles.calCol}>3</div>
-              <div className={styles.calCol}>4</div>
-              <div className={styles.calCol}>5</div>
-              <div className={styles.calCol}>6</div>
-              <div className={styles.calCol}>7</div> */}
-
-            {/* <div className={`${styles.calCell} ${styles.full}`}>不可预约</div>
-              <div className={`${styles.calCell} `}>
-                <h6>我已预约</h6>
-                <h5>4</h5>
-                <Button className={styles.btn}>icon 收货预约</Button>
-              </div>
-              <div className={`${styles.calCell} `}>
-                <h6>我已预约</h6>
-                <h5>4</h5>
-                <Button className={styles.btn}>icon 增值预约</Button>
-              </div>
-              <div className={styles.calCell}>
-                <h6>我已预约</h6>
-                <h5>4</h5>
-              </div>
-              <div className={`${styles.calCell} ${styles.full} `}>约满</div>
-              <div className={`${styles.calCell} ${styles.pd} `}>
-                <h6>排队预约</h6>
-                <h5>1</h5>
-              </div>
-              <div className={`${styles.calCell} ${styles.full} `}>约满</div>
-              <div className={`${styles.calCell} ${styles.full} `}>不可预约</div>
-              <div className={`${styles.calCell} ${styles.kx} `}>
-                <h6>空闲</h6>
-                <Button className={styles.btn}>icon 收货预约</Button>
-              </div> */}
           </div>
         </div>
       </div>
-      {AP_Dialog}
-      {PD_Dialog}
+
+      <DialogAppoint
+        queueNumber={lists.queueNumber}
+        appointObj={appointObj}
+        weekRef={weekRef} />
+
+      {EDIT_Dialog()}
     </>
   );
 });

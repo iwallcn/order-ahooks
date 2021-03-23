@@ -17,7 +17,6 @@ function setLocale(lang) {
     Cookies.set('lang', lang ? lang.split('-')[0] : '', {expires: 30, ..._domain});
     window.location.reload();
   }
-  console.log('setLocale:' + lang);
 }
 
 /**

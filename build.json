@@ -3,7 +3,7 @@
     [
       "build-plugin-fusion",
       {
-        "themePackage": "@alifd/theme-design-pro"
+        "themePackage": "@alifd/theme-17596"
       }
     ],
     [
@@ -31,5 +31,5 @@
     "trunk": {
       "outputDir": "E:/FB4_trunk/fpx-fb4-order-web/src/main/resources/static/build/"
     }
-  }
+  },
 }
